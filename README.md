@@ -1,27 +1,40 @@
 <h1 align="center">Codex Pulse</h1>
 
-**在 Codex 聊天输入框上方，查看用量、额度与使用足迹。**
+<p align="center">
+  在 Codex 聊天输入框上方，查看用量、额度与使用足迹。
+</p>
 
-[![Tests](https://github.com/haochen12/codex-pulse/actions/workflows/test.yml/badge.svg)](https://github.com/haochen12/codex-pulse/actions/workflows/test.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node.js 22+](https://img.shields.io/badge/Node.js-%E2%89%A522-339933.svg)](package.json)
+<p align="center">
+  <a href="https://github.com/haochen12/codex-pulse/actions/workflows/test.yml"><img src="https://github.com/haochen12/codex-pulse/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="package.json"><img src="https://img.shields.io/badge/Node.js-%E2%89%A522-339933.svg" alt="Node.js 22+"></a>
+</p>
+
+<p align="center">
+  <a href="#安装与使用">快速开始</a> ·
+  <a href="#更新">更新补丁</a> ·
+  <a href="https://github.com/haochen12/codex-pulse/issues">反馈问题</a> ·
+  <a href="#反馈与贡献">参与贡献</a>
+</p>
+
+<p align="center">
+  <img src="docs/preview.png" alt="Codex Pulse 用量卡片预览">
+  <br>
+  <sub>预览使用模拟数据。</sub>
+</p>
+
+## 简介
 
 Codex Pulse 是面向 Codex VS Code 扩展的本机补丁，在聊天输入框上方添加用量卡片。
 
-> 非 OpenAI 官方产品，也不是独立 VSIX 扩展。用量数据来自官方 Codex 接口，界面嵌入依赖扩展内部结构。补丁不会关闭 Codex 自动更新，升级后可能需要重新应用或适配。
+| 功能 | 说明 |
+| --- | --- |
+| 会话用量 | 显示会话 token 与当前登录账号 |
+| 周剩余额度 | 百分比、进度条与重置时间 |
+| 使用历史 | 每日 token 用量热力图 |
+| 主题适配 | 沿用 VS Code 配色的紧凑卡片 |
 
-## 功能
-
-- 会话 token 用量与登录账号。
-- 周剩余额度、进度条与重置时间。
-- 每日用量历史热力图。
-- 跟随 VS Code 主题的紧凑卡片。
-
-## 预览
-
-![Codex Pulse 用量卡片](docs/preview.png)
-
-*预览使用模拟数据。*
+> 本项目非 OpenAI 官方产品，也不是独立 VSIX 扩展。用量数据来自官方 Codex 接口，界面嵌入依赖扩展内部结构。**补丁不会关闭 Codex 自动更新**，升级后可能需要重新应用或适配。
 
 ## 安装与使用
 
@@ -77,9 +90,7 @@ node scripts/patch-codex.cjs status
 node scripts/patch-codex.cjs apply
 ```
 
-当前版本未安装补丁时，跳过 `restore`。
-
-仅在 `status` 显示未安装且结构匹配时执行 `apply`；成功后重新加载 VS Code 窗口。
+当前版本未安装补丁时，跳过 `restore`。仅在 `status` 显示未安装且结构匹配时执行 `apply`；成功后重新加载 VS Code 窗口。
 
 **Codex 升级后卡片消失**：在源码目录运行 `status`，显示“未安装补丁；结构匹配”时再运行 `apply`，然后重新加载窗口。显示已安装且校验通过时，无需重复应用。
 
