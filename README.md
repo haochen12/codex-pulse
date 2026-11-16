@@ -23,6 +23,7 @@ Codex Pulse 是面向 **Codex VS Code 扩展**的轻量本机补丁。它在聊�
 - [快速开始](#快速开始)
 - [命令与安装位置](#命令与安装位置)
 - [恢复与升级](#恢复与升级)
+- [通过 Skill 维护补丁](#通过-skill-维护补丁)
 - [数据来源与隐私](#数据来源与隐私)
 - [兼容性](#兼容性)
 - [常见问题](#常见问题)
@@ -128,6 +129,18 @@ node scripts/patch-codex.cjs apply
 ```
 
 仅在 `status` 显示未安装且结构匹配时运行 `apply`，然后重新加载窗口。如果显示已安装且校验通过，无需重新应用；结构不匹配时等待补丁适配。不要将旧版本的备份恢复到新版本目录。
+
+## 通过 Skill 维护补丁
+
+仓库提供 [`codex-pulse-update`](skills/codex-pulse-update/SKILL.md) 技能，用于检查状态、更新源码，以及在 Codex 升级后重新应用兼容的补丁。
+
+将 `skills/codex-pulse-update` 文件夹复制到 `$CODEX_HOME/skills/`，未设置 `CODEX_HOME` 时使用 `~/.codex/skills/`。让 Codex 重新加载技能后，在对话中输入：
+
+```text
+$codex-pulse-update 更新 Codex Pulse 补丁
+```
+
+仅检查时输入 `$codex-pulse-update 检查补丁状态`。技能不会关闭 Codex 自动更新；遇到不兼容版本会报告需要适配。它在被调用时执行维护，不会后台自动运行，也不会替你升级 Codex 扩展。
 
 ## 数据来源与隐私
 
