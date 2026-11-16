@@ -49,6 +49,13 @@ const { chromium } = require('playwright');
     await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'local-codex-account', label: 'long.account.name@example.com' } })));
     assert.equal(await page.locator('.cuc-account').innerText(), 'long.account.name@example.com');
     assert.equal(await page.locator('.cuc-account').getAttribute('title'), 'long.account.name@example.com');
+    for (const [planType, expected] of [['free', 'Free'], ['plus', 'Plus'], ['pro', 'Pro'], [null, '未知套餐'], ['new-tier', '未知套餐']]) {
+      await page.evaluate(planType => window.dispatchEvent(new MessageEvent('message', { data: { type: 'local-codex-account', label: 'long.account.name@example.com', planType, accountType: 'chatgpt' } })), planType);
+      assert.equal(await page.locator('.cuc-plan').innerText(), expected);
+    }
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'local-codex-account', label: 'API Key 账号', accountType: 'apiKey' } })));
+    assert.equal(await page.locator('.cuc-plan').innerText(), 'API');
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'local-codex-account', label: 'long.account.name@example.com', planType: 'pro', accountType: 'chatgpt' } })));
     assert.ok(await page.locator('.cuc-meter').evaluate(node => Math.abs(node.querySelector('.cuc-account').getBoundingClientRect().width - node.querySelector('.cuc-meter-label').getBoundingClientRect().width) < 1), 'account width matches usage label');
     await page.screenshot({ path: path.join(root, 'embedded-preview.png') });
     for (const width of [280, 420]) {
@@ -65,6 +72,8 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('.cuc-meter-label').first().innerText(), '今日 TOKENS');
     await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'local-codex-usage-calendar', error: 'offline' } })));
     assert.match(await page.locator('.cuc-state').innerText(), /每日记录暂不可用/);
+    await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'local-codex-account', label: '正在读取账号…', reset: true } })));
+    assert.equal(await page.locator('.cuc-plan').innerText(), '未知套餐');
     assert.equal(await page.locator('#composer').innerText(), '输入消息…');
     assert.deepEqual(errors, []);
     console.log('PASS: fixed 72px card, historical background, native live usage, quota and reset, bottom progress, no expand control, narrow layouts, remount and error state.');

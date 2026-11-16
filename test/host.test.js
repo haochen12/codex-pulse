@@ -5,12 +5,12 @@ const path = require('node:path');
 const vm = require('node:vm');
 test('official requests provide daily totals and quotas without reading rollouts', async () => {
   const module = { exports: {} }, calls = [], messages = [], intervals = new Map();
-  let handler, cleanup, fail = false;
+  let handler, cleanup, fail = false, planType = 'plus';
   const source = {
     registerProvider(name, value) { handler = value; return { dispose() {} }; },
     sendRequest(provider, id, method, params) {
       calls.push(method);
-      queueMicrotask(() => handler.onResult(fail ? { id, error: { message: 'official unavailable' } } : { id, result: method === 'account/read' ? { account: { type: 'chatgpt', email: 'user@example.com' } } : method === 'account/usage/read' ? { dailyUsageBuckets: [{ startDate: '2026-11-14', tokens: 12345 }] } : { rateLimits: { limitId: 'codex', primary: { usedPercent: 25 } } } }));
+      queueMicrotask(() => handler.onResult(fail ? { id, error: { message: 'official unavailable' } } : { id, result: method === 'account/read' ? { account: { type: 'chatgpt', email: 'user@example.com', planType } } : method === 'account/usage/read' ? { dailyUsageBuckets: [{ startDate: '2026-11-14', tokens: 12345 }] } : { rateLimits: { limitId: 'codex', primary: { usedPercent: 25 } } } }));
     }
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../embedded/host.cjs'), 'utf8'), {
@@ -24,6 +24,12 @@ test('official requests provide daily totals and quotas without reading rollouts
   await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(calls, ['account/usage/read', 'account/rateLimits/read', 'account/read']);
   assert.equal(messages.find(item => item.type === 'local-codex-account').label, 'user@example.com');
+  assert.equal(messages.find(item => item.type === 'local-codex-account').planType, 'plus');
+  for (const value of ['free', 'pro', undefined]) {
+    planType = value;
+    await intervals.get(1)();
+    assert.equal(messages.filter(item => item.type === 'local-codex-account').at(-1).planType, value ?? null);
+  }
   assert.equal(messages.find(item => item.type === 'local-codex-native-usage').totalTokens, 987);
   assert.equal(messages.find(item => item.type === 'local-codex-quota').windows[0].remaining, 75);
   assert.equal(messages.find(item => item.type === 'local-codex-usage-calendar').data.days[0].total_tokens, 12345);

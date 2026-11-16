@@ -42,6 +42,8 @@ async function tick() {
     if (epoch !== accountEpoch) return;
     const account = identity.status === 'fulfilled' ? identity.value?.account : null;
     accountMessage = { type: 'local-codex-account', label: typeof account?.email === 'string' && account.email ? account.email : account?.type === 'apiKey' ? 'API Key 账号' : identity.status === 'rejected' ? '账号暂不可用' : '未提供账号名称' };
+    accountMessage.planType = typeof account?.planType === 'string' ? account.planType : null;
+    accountMessage.accountType = account?.type || null;
     for (const view of views) { try { view.postMessage(accountMessage).catch(() => {}); } catch {} }
     if (limits.status === 'fulfilled') nativeUsage('account/rateLimits/updated', limits.value);
     if (usage.status === 'rejected') throw usage.reason;

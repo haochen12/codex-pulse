@@ -8,6 +8,8 @@
   let activeThread;
   let quota;
   let accountLabel = '正在读取账号…';
+  let planType, accountType;
+  const planNames = { free: 'Free', plus: 'Plus', pro: 'Pro', team: 'Team', business: 'Business', enterprise: 'Enterprise', edu: 'Edu' };
   const node = document.createElement('section');
   node.className = 'cuc-card';
   node.setAttribute('aria-label', 'Codex 使用日历');
@@ -29,7 +31,12 @@
     meter.append(el('span', 'cuc-meter-label', live !== undefined ? '会话 TOKENS' : '今日 TOKENS'), el('strong', 'cuc-meter-value', live !== undefined ? compact(live) : data ? compact(today) : '—'));
     const account = el('span', 'cuc-account', accountLabel);
     account.title = accountLabel;
-    meter.append(account);
+    const accountRow = el('div', 'cuc-account-row');
+    const planLabel = accountType === 'apiKey' ? 'API' : planNames[planType] || '未知套餐';
+    const plan = el('span', 'cuc-plan', planLabel);
+    plan.title = accountType === 'apiKey' ? 'API Key 账号，不对应 ChatGPT 订阅套餐' : planNames[planType] ? `官方账号套餐：${planLabel}` : '官方接口未提供可识别的套餐信息';
+    accountRow.append(account, plan);
+    meter.append(accountRow);
     meter.title = live !== undefined ? `当前会话累计 ${number(live)} tokens · Codex 原生统计` : error ? `读取失败：${error}` : `官方每日汇总 ${number(today)} tokens`;
     surface.append(meter);
     const week = quota?.windows?.find(item => item.minutes === 10080);
@@ -93,6 +100,8 @@
   window.addEventListener('message', event => {
     if (event.data?.type === 'local-codex-account') {
       accountLabel = typeof event.data.label === 'string' ? event.data.label : '账号暂不可用';
+      planType = typeof event.data.planType === 'string' ? event.data.planType.trim().toLowerCase() : undefined;
+      accountType = event.data.accountType;
       if (event.data.reset) { liveUsage.clear(); data = undefined; quota = undefined; }
       render(); mount(); return;
     }
