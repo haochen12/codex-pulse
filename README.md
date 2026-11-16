@@ -1,4 +1,4 @@
-# Codex Pulse
+<h1 align="center">Codex Pulse</h1>
 
 **在 Codex 聊天输入框上方，查看用量、额度与使用足迹。**
 
