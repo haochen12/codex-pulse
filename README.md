@@ -1,85 +1,215 @@
 # Codex Pulse
 
-A lightweight usage dashboard patch for the Codex VS Code extension.
+**在 Codex 输入框上方，查看用量、额度与使用足迹。**
 
-在 Codex 输入框上方，查看用量、额度与使用足迹。
+[![Tests](https://github.com/haochen12/codex-pulse/actions/workflows/test.yml/badge.svg)](https://github.com/haochen12/codex-pulse/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js 22+](https://img.shields.io/badge/Node.js-%E2%89%A522-339933.svg)](package.json)
 
-![Codex Pulse preview with simulated data](docs/preview.png)
+Codex Pulse 是面向 **Codex VS Code 扩展**的轻量本机补丁。它在聊天输入框上方添加一张用量卡片，将会话 token、周剩余额度、重置时间和历史热力图集中展示。
 
-> 独立开源项目，与 OpenAI 无隶属关系。预览使用模拟数据。
+> 本项目不是 OpenAI 官方产品，也不是独立 VSIX 扩展。数据使用官方 Codex App Server 接口；界面嵌入与连接接入依赖扩展内部结构，Codex 升级后可能需要重新应用或适配。
 
-跨平台的本机补丁工具，在 Codex 输入框上方展示固定用量卡片。历史热力格作背景，前景显示会话 token、周剩余额度及重置时间，底部进度条表示周剩余额度。配色跟随 VS Code 主题。
+## 预览
 
-这是 Codex 补丁，不是 VSIX 插件。数据使用官方接口，连接接入与界面嵌入仍依赖 Codex 内部结构，升级可能需要适配。
+![Codex Pulse 用量卡片](docs/preview.png)
 
-## 使用
+*预览使用模拟账号与用量，不包含真实账户数据。*
 
-需要 Node.js 22+，以及已安装并登录的 Codex VS Code 扩展。运行补丁无需 npm install，无运行时第三方依赖。
+## 目录
 
-先下载源码，或克隆仓库：
+- [功能](#功能)
+- [环境要求](#环境要求)
+- [快速开始](#快速开始)
+- [命令与安装位置](#命令与安装位置)
+- [恢复与升级](#恢复与升级)
+- [数据来源与隐私](#数据来源与隐私)
+- [兼容性](#兼容性)
+- [常见问题](#常见问题)
+- [开发与测试](#开发与测试)
+- [参与贡献](#参与贡献)
+- [许可证](#许可证)
+
+## 功能
+
+- **会话用量**：接收 Codex 原生统计事件，以 K/M 简写显示，悬停查看完整数值。
+- **周剩余额度**：百分比、底部进度条与官方重置时间。
+- **账号标识**：显示官方返回的登录邮箱，长邮箱省略，悬停查看完整内容。
+- **历史背景**：最近 12 周的每日用量热力格，悬停查看日期与 token 数。
+- **主题适配**：沿用 VS Code 的背景、文字、边框和强调色。
+- **安装管理**：扩展目录识别、安装状态检查、原文件备份及 SHA-256 恢复校验。
+
+## 环境要求
+
+- Node.js **22 或更高版本**。
+- 已安装并登录的 Codex VS Code 扩展。
+- 当前用户对目标扩展目录有写入权限。
+- 通过 Git 获取源码时需要 Git，也可下载仓库源码 ZIP。
+
+应用补丁无需运行 `npm install`。第三方依赖仅用于开发阶段的界面测试。
+
+## 快速开始
+
+### 1. 获取源码
 
 ```sh
 git clone https://github.com/haochen12/codex-pulse.git
 cd codex-pulse
 ```
 
-在项目目录打开终端，Windows、macOS、Linux 使用相同命令：
+### 2. 检查并应用
 
 ```sh
 node scripts/patch-codex.cjs status
 node scripts/patch-codex.cjs apply
-node scripts/patch-codex.cjs restore
 ```
 
-完成应用或恢复后，在 VS Code 运行「开发人员：重新加载窗口」。不要并发运行补丁命令。
+Windows、macOS 和 Linux 使用相同命令。`status` 检查当前安装状态与入口结构；`apply` 进行安装前校验、备份和写入。结构不匹配时会停止操作。
 
-默认读取 ~/.vscode/extensions 注册表，选择启用的 Codex 版本。其他位置：
+### 3. 重新加载 VS Code
+
+打开命令面板，运行 **Developer: Reload Window / 开发人员：重新加载窗口**。卡片会出现在 Codex 输入框上方，收到官方数据后更新。
+
+## 命令与安装位置
+
+| 命令 | 用途 |
+| --- | --- |
+| `node scripts/patch-codex.cjs status` | 检查安装状态；已安装时校验补丁文件 |
+| `node scripts/patch-codex.cjs apply` | 备份原文件并应用补丁 |
+| `node scripts/patch-codex.cjs restore` | 校验并恢复原文件 |
+| `node scripts/patch-codex.cjs --help` | 查看参数说明 |
+
+默认从 `~/.vscode/extensions` 的注册表选择启用的 Codex 版本。存在多个未注册版本时，需要明确指定目录。
+
+| 参数 | 用途 |
+| --- | --- |
+| `--editor vscode` | VS Code 稳定版，默认值 |
+| `--editor insiders` | VS Code Insiders |
+| `--editor server` | VS Code 远程扩展目录 |
+| `--editor server-insiders` | VS Code Insiders 远程扩展目录 |
+| `--extensions-dir "路径"` | 指定扩展根目录，适用于便携安装或自定义目录 |
+| `--target "路径"` | 直接指定某个 Codex 扩展版本的目录 |
+
+例如：
 
 ```sh
 node scripts/patch-codex.cjs apply --editor insiders
-node scripts/patch-codex.cjs apply --editor server
-node scripts/patch-codex.cjs apply --editor server-insiders
 node scripts/patch-codex.cjs apply --extensions-dir "/custom/extensions"
 node scripts/patch-codex.cjs apply --target "/custom/extensions/openai.chatgpt-VERSION"
 ```
 
-路径含空格需加引号。便携安装、其他编辑器分支用 --extensions-dir 或 --target。WSL、SSH、容器应在 Codex 实际运行的扩展宿主环境执行；本地、远程安装分别处理。恢复时传入与安装相同的路径选项。多个未注册版本不自动选择最新版本。
+路径包含空格时请加引号。WSL、SSH 和容器用户应在 **Codex 实际运行的扩展宿主环境**执行；本地与远程安装分别处理。使用路径参数安装后，检查和恢复时也传入相同参数。
 
-## 官方数据
+## 恢复与升级
 
-账号标识使用 account/read 返回的登录邮箱（官方未返回昵称）；显示在会话用量下方，长邮箱省略，悬停查看完整邮箱。账号变更时清空旧显示并重新请求。
+恢复补丁：
 
+```sh
+node scripts/patch-codex.cjs restore
+```
 
-- account/usage/read：每日历史，每分钟刷新，日期沿用官方返回。
-- thread/tokenUsage/updated：当前会话累计用量，随原生事件更新；未收到时显示今日汇总。
-- account/rateLimits/read 与 account/rateLimits/updated：剩余额度。周窗口为 10080 分钟，重置时间来自 resetsAt。
-- 不读取会话 JSONL，不用日志估算，不读取登录凭据。接口不可用时显示错误或等待；API key 账户或未开放能力的账户可能没有统计。
-- 重置时间默认使用系统时区；已配置 codexUsage.timeZone 时沿用。每日桶日期不换算时区。
+恢复完成后重新加载 VS Code。请勿同时运行多个补丁命令。
 
-## 兼容与恢复
+补丁修改 `out/extension.js`、`webview/index.html`，并新增三个资源文件。原文件与校验清单保存在目标扩展目录的 `codex-usage-patch-backup` 中。恢复前会检查补丁和备份文件，遇到外部修改时停止，避免覆盖其他更新。
 
-已验证 Codex 26.1111.21308。跨平台不代表兼容所有 Codex 版本；内部结构不匹配时拒绝写入。
+- **更新 Codex Pulse**：先用原工具恢复，再更新源码并重新应用。
+- **更新 Codex**：升级可能覆盖补丁或产生新的扩展目录。升级后先运行 `status`，确认结构匹配再运行 `apply`。
+- **完全移除**：先恢复并重新加载 VS Code，再删除项目目录。不要提前删除仍需用于恢复的备份。
 
-修改 out/extension.js 与 webview/index.html，新增三个资源文件。原文件及 SHA-256 校验保存在目标扩展的 codex-usage-patch-backup。恢复前检查全部文件，外部修改会阻止恢复，避免覆盖其他更新。旧补丁先 restore 再 apply；升级后先 status 检查。不要删除需要恢复的备份。
+## 数据来源与隐私
 
-## 开发
+| 内容 | 官方接口或事件 | 更新方式 |
+| --- | --- | --- |
+| 每日历史 | `account/usage/read` | 每分钟请求；日期沿用官方返回 |
+| 当前会话 token | `thread/tokenUsage/updated` | 收到原生事件时更新 |
+| 账户额度 | `account/rateLimits/read`、`account/rateLimits/updated` | 定期读取及原生事件更新 |
+| 登录账号 | `account/read` | 定期读取，账号变更时重新请求 |
+
+协议参考：[Codex App Server 官方文档](https://learn.chatgpt.com/docs/app-server)。
+
+数据请求通过现有 Codex 连接发送。补丁不解析会话 JSONL、不读取登录凭据，也没有独立的遥测或数据上传服务。邮箱和统计数据会显示在界面中，分享截图前请自行检查。
+
+统计口径：
+
+- 当前会话统计尚未到达时，卡片显示官方今日汇总，并标注“今日 TOKENS”。
+- token 是用量统计，不能直接换算为账单金额；K/M 显示有四舍五入。
+- 周额度由官方返回的 10080 分钟窗口识别，进度条表示**剩余**百分比。没有该窗口时显示等待。
+- 重置时间默认使用系统时区；已有 `codexUsage.timeZone` 配置时沿用。每日汇总日期不重新换算时区。
+- 热力颜色按可见 12 周内的单日峰值分档，表示相对用量。
+
+## 兼容性
+
+已验证的 Codex 扩展版本：**26.1111.21308**。
+
+| 平台 | 验证情况 |
+| --- | --- |
+| Windows | 已完成本机补丁应用、恢复及 Chromium 界面验证 |
+| macOS | 已检查目录逻辑与可移植性，尚未完成实机验证 |
+| Linux | 已检查目录逻辑与可移植性，尚未完成实机验证 |
+
+仓库配置了三平台单元测试和 Linux 浏览器测试，执行结果见 [GitHub Actions](https://github.com/haochen12/codex-pulse/actions)。CI 不等同于真实 Codex 扩展中的实机验证。
+
+跨平台工具不代表兼容所有 Codex 版本。扩展内部结构或官方接口可用性变化时，仍可能需要适配。
+
+## 常见问题
+
+**为什么显示“待更新”或读取失败？**
+
+官方接口可能尚未返回统计、额度窗口已经到期，或当前登录方式不支持相关能力。API key 账户不保证有账户级用量数据。补丁不会回退到本地日志估算。
+
+**为什么不是逐 token 跳动？**
+
+会话数字随 Codex 上报统计事件更新，频率由 Codex 决定；历史汇总每分钟刷新。
+
+**提示结构不匹配怎么办？**
+
+当前扩展版本可能需要适配。请提交 Issue 并附版本信息，不要手动绕过结构检查。
+
+**恢复时提示文件被修改怎么办？**
+
+目标文件可能被扩展升级或其他补丁改动。保留备份与错误信息，先确认改动来源，不要用旧文件直接覆盖新版扩展。
+
+## 开发与测试
+
+单元测试无需安装依赖：
 
 ```sh
 npm test
+```
+
+安装开发依赖并运行界面测试：
+
+```sh
 npm ci
 npx playwright install chromium
 npm run test:ui
+```
+
+界面测试使用模拟官方返回，不读取真实账户记录。可通过环境变量 `CHROME_PATH` 指定现有浏览器的可执行文件路径。
+
+打包运行文件：
+
+```sh
 npm pack
 ```
 
-单元测试无依赖。UI 测试使用模拟官方返回，不读取本机记录；CHROME_PATH 可指定浏览器。npm pack 只包含运行工具、资源、说明及许可证。
+生成的压缩包只包含运行脚本、嵌入资源、README 和许可证。本项目没有发布到 npm；从仓库源码或自行生成的包运行。
 
-Windows 已验证文件操作和 Chromium 布局。macOS、Linux 已检查目录逻辑与可移植性，尚未实机验证。
+```text
+embedded/   卡片界面与官方接口桥接
+scripts/    路径识别、补丁管理和界面验证
+test/      单元测试
+docs/      模拟数据预览
+```
 
-## 贡献
+## 参与贡献
 
-欢迎通过 Issue 报告 Codex 版本兼容问题，请附操作系统、VS Code 和 Codex 版本、错误信息。请勿提交邮箱、登录凭据、真实聊天记录或个人用量。提交代码前运行单元测试；修改界面时运行 UI 测试。
+欢迎通过 [Issues](https://github.com/haochen12/codex-pulse/issues) 报告问题，或提交 Pull Request。
 
-## License
+报告兼容问题时，请提供操作系统、VS Code 版本、Codex 扩展版本、复现步骤和错误信息。请移除邮箱、登录凭据、真实聊天记录及个人用量。
 
-[MIT](LICENSE)
+提交代码前运行 `npm test`；修改界面时同时运行 `npm run test:ui`。版本适配请说明验证过的 Codex 版本，以及安装和恢复结果。
+
+## 许可证
+
+本项目采用 [MIT License](LICENSE)。Copyright © 2026 haochen12。
