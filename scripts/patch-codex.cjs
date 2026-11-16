@@ -54,7 +54,7 @@ async function apply(target) {
     await fs.rm(manifestPath);
     throw error;
   }
-  console.log(`已应用到 Codex ${packageInfo.version}：${target}\n备份：${backup}\n请在 VS Code 中运行 Developer: Reload Window（开发人员：重新加载窗口）。`);
+  console.log(`已应用到 Codex ${packageInfo.version}：${target}\n备份：${backup}\n未修改自动更新设置或锁定版本。Codex 更新后若补丁失效，请先 status 检查，再 apply。\n请在 VS Code 中运行 Developer: Reload Window（开发人员：重新加载窗口）。`);
 }
 async function restore(target) {
   target = path.resolve(target);

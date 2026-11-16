@@ -102,6 +102,10 @@ node scripts/patch-codex.cjs apply --target "/custom/extensions/openai.chatgpt-V
 
 ## 恢复与升级
 
+**Codex Pulse 不会关闭 Codex 自动更新或锁定扩展版本**，也不会修改 VS Code 更新设置、扩展注册信息或文件权限。是否自动更新由 VS Code 中 Codex 扩展的自动更新设置决定；可在扩展面板中找到 Codex，通过齿轮菜单检查。
+
+Codex 可以照常升级，无需为了保留卡片而关闭更新。升级可能覆盖补丁，卡片消失时按下方流程重新应用；本工具不会在后台自动修改新版本。
+
 恢复补丁：
 
 ```sh
@@ -115,6 +119,15 @@ node scripts/patch-codex.cjs restore
 - **更新 Codex Pulse**：先用原工具恢复，再更新源码并重新应用。
 - **更新 Codex**：升级可能覆盖补丁或产生新的扩展目录。升级后先运行 `status`，确认结构匹配再运行 `apply`。
 - **完全移除**：先恢复并重新加载 VS Code，再删除项目目录。不要提前删除仍需用于恢复的备份。
+
+Codex 升级后执行：
+
+```sh
+node scripts/patch-codex.cjs status
+node scripts/patch-codex.cjs apply
+```
+
+仅在 `status` 显示未安装且结构匹配时运行 `apply`，然后重新加载窗口。如果显示已安装且校验通过，无需重新应用；结构不匹配时等待补丁适配。不要将旧版本的备份恢复到新版本目录。
 
 ## 数据来源与隐私
 
