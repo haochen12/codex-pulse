@@ -39,18 +39,24 @@
     meter.append(accountRow);
     meter.title = live !== undefined ? `当前会话累计 ${number(live)} tokens · Codex 原生统计` : error ? `读取失败：${error}` : `官方每日汇总 ${number(today)} tokens`;
     surface.append(meter);
-    const week = quota?.windows?.find(item => item.minutes === 10080);
+    // Prefer the weekly window. Free accounts may only receive a shorter window.
+    const week = quota?.windows?.find(item => item.minutes === 10080) ||
+      (planType === 'free' ? quota?.windows?.find(item => Number.isFinite(item.minutes) && item.minutes > 0 && Number.isFinite(item.remaining)) : undefined);
+    const quotaLabel = week?.minutes === 10080 || planType !== 'free' ? '周剩余额度' : '剩余额度';
     const stale = Number.isFinite(week?.resetsAt) && week.resetsAt * 1000 <= Date.now();
     const remaining = Number.isFinite(week?.remaining) ? Math.max(0, Math.min(100, week.remaining)) : null;
     const quotaView = el('div', 'cuc-quota');
-    quotaView.append(el('span', 'cuc-meter-label', '周剩余额度'), el('strong', 'cuc-quota-value', remaining !== null && !stale ? `${new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 }).format(remaining)}%` : '待更新'));
+    const available = remaining !== null && !stale;
+    const emptyLabel = stale ? '待刷新' : quota ? '未提供' : '读取中';
+    quotaView.append(el('span', 'cuc-meter-label', quotaLabel), el('strong', 'cuc-quota-value', available ? `${new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 }).format(remaining)}%` : emptyLabel));
     const deadline = Number.isFinite(week?.resetsAt) ? new Intl.DateTimeFormat('zh-CN', { timeZone: data?.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone, month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(week.resetsAt * 1000)) : null;
-    quotaView.append(el('span', 'cuc-deadline', deadline ? `${deadline} 重置` : '等待官方上报'));
-    quotaView.title = `${quota?.limitId || 'Codex'} · 周剩余额度${deadline ? ` · ${deadline} 重置` : ''}`;
+    quotaView.append(el('span', 'cuc-deadline', stale ? '等待官方刷新' : deadline ? `${deadline} 重置` : quota && !week ? '官方未返回额度' : '等待官方上报'));
+    quotaView.title = `${quota?.limitId || 'Codex'} · ${quotaLabel}${week ? ` · 官方 ${week.minutes} 分钟窗口` : ''}${deadline ? ` · ${deadline} 重置` : ''}`;
     surface.append(quotaView); node.append(surface);
     const bar = el('progress', 'cuc-card-progress');
     bar.max = 100; bar.value = remaining !== null && !stale ? remaining : 0;
-    bar.setAttribute('aria-label', remaining !== null && !stale ? `周剩余额度 ${remaining}%` : '周剩余额度等待更新');
+    bar.hidden = !available;
+    bar.setAttribute('aria-label', available ? `${quotaLabel} ${remaining}%` : `${quotaLabel}${emptyLabel}`);
     node.append(bar);
     if (data?.days?.length) {
       const end = new Date(`${data.today}T00:00:00Z`);
