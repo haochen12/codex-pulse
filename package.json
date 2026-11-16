@@ -1,0 +1,35 @@
+{
+  "name": "codex-pulse",
+  "version": "0.2.1",
+  "description": "A lightweight usage dashboard patch for the Codex VS Code extension",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:ui": "node scripts/verify-ui.cjs",
+    "apply": "node scripts/patch-codex.cjs apply",
+    "restore": "node scripts/patch-codex.cjs restore",
+    "status": "node scripts/patch-codex.cjs status"
+  },
+  "files": [
+    "embedded/",
+    "scripts/patch-codex.cjs",
+    "scripts/discovery.cjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/haochen12/codex-pulse.git"
+  },
+  "homepage": "https://github.com/haochen12/codex-pulse#readme",
+  "bugs": {
+    "url": "https://github.com/haochen12/codex-pulse/issues"
+  }
+}
