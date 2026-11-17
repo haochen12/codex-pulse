@@ -75,7 +75,7 @@
           const cell = el('button', `cuc-cell cuc-level-${level}`);
           cell.type = 'button'; cell.dataset.date = key; cell.disabled = key > data.today;
           const entry = map.get(key);
-          cell.title = entry ? `${key} · ${number(value)} tokens · 官方每日汇总` : `${key} · 暂无官方记录（不是已确认的 0 token）`;
+          cell.title = entry ? `${key} · ${compact(value)} tokens（${number(value)}） · 官方每日汇总` : `${key} · 暂无官方记录（不是已确认的 0 token）`;
           cell.setAttribute('aria-label', cell.title);
           column.append(cell); cursor.setUTCDate(cursor.getUTCDate() + 1);
         }
