@@ -45,7 +45,7 @@ const { chromium } = require('playwright');
     assert.ok(geometry.height >= 60 && geometry.height <= 76);
     assert.ok(Math.abs(geometry.bottom - geometry.barBottom) < 2);
     assert.ok(geometry.bottom <= geometry.inputTop);
-    assert.match(await page.locator('.cuc-cell:not([disabled])').first().getAttribute('title'), /tokens/);
+    assert.match(await page.locator('.cuc-cell:not([disabled])').first().getAttribute('title'), /tokens|暂无官方记录/);
     await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: { type: 'local-codex-account', label: 'long.account.name@example.com' } })));
     assert.equal(await page.locator('.cuc-account').innerText(), 'long.account.name@example.com');
     assert.equal(await page.locator('.cuc-account').getAttribute('title'), 'long.account.name@example.com');

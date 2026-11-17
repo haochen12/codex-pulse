@@ -10,7 +10,7 @@ test('official requests provide daily totals and quotas without reading rollouts
     registerProvider(name, value) { handler = value; return { dispose() {} }; },
     sendRequest(provider, id, method, params) {
       calls.push(method);
-      queueMicrotask(() => handler.onResult(fail ? { id, error: { message: 'official unavailable' } } : { id, result: method === 'account/read' ? { account: { type: 'chatgpt', email: 'user@example.com', planType } } : method === 'account/usage/read' ? { dailyUsageBuckets: [{ startDate: '2026-11-14', tokens: 12345 }] } : { rateLimits: { limitId: 'codex', primary: { usedPercent: 25 } } } }));
+      queueMicrotask(() => handler.onResult(fail ? { id, error: { message: 'official unavailable' } } : { id, result: method === 'account/read' ? { account: { type: 'chatgpt', email: 'user@example.com', planType } } : method === 'account/usage/read' ? { dailyUsageBuckets: [{ startDate: '2026-11-14', total_tokens: 12345 }] } : { rateLimits: { limitId: 'codex', primary: { usedPercent: 25 } } } }));
     }
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../embedded/host.cjs'), 'utf8'), {

@@ -26,7 +26,8 @@
     node.replaceChildren();
     const surface = el('div', 'cuc-foreground');
     const live = liveUsage.get(activeThread);
-    const today = data?.days.find(day => day.date === data.today)?.total_tokens || 0;
+    const todayEntry = data?.days.find(day => day.date === data.today);
+    const today = todayEntry?.total_tokens || 0;
     const meter = el('div', 'cuc-meter');
     meter.append(el('span', 'cuc-meter-label', live !== undefined ? '会话 TOKENS' : '今日 TOKENS'), el('strong', 'cuc-meter-value', live !== undefined ? compact(live) : data ? compact(today) : '—'));
     const account = el('span', 'cuc-account', accountLabel);
@@ -37,7 +38,7 @@
     plan.title = accountType === 'apiKey' ? 'API Key 账号，不对应 ChatGPT 订阅套餐' : planNames[planType] ? `官方账号套餐：${planLabel}` : '官方接口未提供可识别的套餐信息';
     accountRow.append(account, plan);
     meter.append(accountRow);
-    meter.title = live !== undefined ? `当前会话累计 ${number(live)} tokens · Codex 原生统计` : error ? `读取失败：${error}` : `官方每日汇总 ${number(today)} tokens`;
+    meter.title = live !== undefined ? `当前会话累计 ${number(live)} tokens · Codex 原生统计` : error ? `读取失败：${error}` : todayEntry ? `官方每日汇总 ${number(today)} tokens` : '官方尚未返回今天的每日记录';
     surface.append(meter);
     // Prefer the weekly window. Free accounts may only receive a shorter window.
     const week = quota?.windows?.find(item => item.minutes === 10080) ||
@@ -73,7 +74,8 @@
           const level = value ? Math.min(4, Math.max(1, Math.ceil(value / max * 4))) : 0;
           const cell = el('button', `cuc-cell cuc-level-${level}`);
           cell.type = 'button'; cell.dataset.date = key; cell.disabled = key > data.today;
-          cell.title = `${key} · ${number(value)} tokens · 官方每日汇总`;
+          const entry = map.get(key);
+          cell.title = entry ? `${key} · ${number(value)} tokens · 官方每日汇总` : `${key} · 暂无官方记录（不是已确认的 0 token）`;
           cell.setAttribute('aria-label', cell.title);
           column.append(cell); cursor.setUTCDate(cursor.getUTCDate() + 1);
         }

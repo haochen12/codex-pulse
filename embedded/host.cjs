@@ -48,7 +48,7 @@ async function tick() {
     if (limits.status === 'fulfilled') nativeUsage('account/rateLimits/updated', limits.value);
     if (usage.status === 'rejected') throw usage.reason;
     if (!Array.isArray(usage.value.dailyUsageBuckets)) throw new Error('官方接口暂未返回每日用量，未使用本地日志补算');
-    const days = usage.value.dailyUsageBuckets.filter(day => /^\d{4}-\d{2}-\d{2}$/.test(day.startDate) && Number.isFinite(day.tokens) && day.tokens >= 0).map(day => ({ date: day.startDate, total_tokens: day.tokens })).sort((a,b) => a.date.localeCompare(b.date));
+    const days = usage.value.dailyUsageBuckets.map(day => ({ ...day, _tokens: day.tokens ?? day.total_tokens ?? day.totalTokens })).filter(day => /^\d{4}-\d{2}-\d{2}$/.test(day.startDate) && Number.isFinite(day._tokens) && day._tokens >= 0).map(day => ({ date: day.startDate, total_tokens: day._tokens })).sort((a,b) => a.date.localeCompare(b.date));
     const zone = vscode.workspace.getConfiguration('codexUsage').get('timeZone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
     const parts = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
     const today = ['year','month','day'].map(key => parts.find(part => part.type === key).value).join('-');
